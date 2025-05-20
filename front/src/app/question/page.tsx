@@ -10,6 +10,8 @@ import { getMatieres, askQuestion } from "@/lib/api";
 import { Navbar } from "@/components/ui/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function QuestionPage() {
   const router = useRouter();
@@ -144,18 +146,16 @@ export default function QuestionPage() {
                       {question}
                     </CardDescription>
                   </CardHeader>
-                </Card>
-
-                <Card className="border shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Réponse</CardTitle>
-                    <CardDescription>
-                      Réponse générée à partir de vos documents
-                    </CardDescription>
-                  </CardHeader>
                   <CardContent>
-                    <div className="text-muted-foreground whitespace-pre-wrap">
-                      {response.response}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium mb-2">Réponse</h3>
+                        <div className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {response.response}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -165,7 +165,7 @@ export default function QuestionPage() {
                   <div className="grid gap-4">
                     {response.sources.map((source, index) => (
                       <Card key={index} className="overflow-hidden">
-                        <CardHeader className="bg-muted/30 py-3">
+                        <CardHeader className="">
                           <div className="flex items-center justify-between">
                             <div className="font-medium">{source.source}</div>
                             {source.relevance_score !== undefined && (
@@ -175,14 +175,19 @@ export default function QuestionPage() {
                             )}
                           </div>
                           <CardDescription>
-                            {source.section}
+                            {/* {source.section} */}
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {source.contenu}
+                            </ReactMarkdown>
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-4">
-                          <div className="bg-muted/20 p-3 rounded-md text-sm">
-                            {source.contenu}
+                        {/* <CardContent className="pt-0">
+                          <div className="bg-muted/20 rounded-md prose prose-sm dark:prose-invert max-w-none">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {source.contenu}
+                            </ReactMarkdown>
                           </div>
-                        </CardContent>
+                        </CardContent> */}
                       </Card>
                     ))}
                   </div>

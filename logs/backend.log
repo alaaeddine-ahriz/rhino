@@ -1,0 +1,30 @@
+/Users/alaaeddineahriz/Documents/4TC/S2/SIR/SIR_vf/backend/app.py:45: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [80629]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+PyPDF2 importé avec succès! Version: 3.0.1
+État actuel de l'index:
+{
+  "dimension": 1024,
+  "index_fullness": 0.0,
+  "namespaces": {
+    "matiere-syd": {
+      "vector_count": 196
+    },
+    "matiere-tcp": {
+      "vector_count": 82
+    }
+  },
+  "total_vector_count": 278
+}
+
+

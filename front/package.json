@@ -16,6 +16,7 @@
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-toast": "^1.2.13",
     "@shadcn/ui": "^0.0.4",
+    "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^11.7.3",
@@ -25,6 +26,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
     "zod": "^3.25.7"

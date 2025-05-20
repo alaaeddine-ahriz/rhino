@@ -1,0 +1,13 @@
+
+> ui-rag-chatbot@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.2 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://10.56.127.145:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 76ms
+ ✓ Ready in 746ms

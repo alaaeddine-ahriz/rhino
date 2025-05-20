@@ -10,6 +10,8 @@ import { getMatieres, generateReflectionQuestion, evaluateResponse, ReflectionQu
 import { Navbar } from "@/components/ui/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function ReflectionPage() {
   const router = useRouter();
@@ -350,8 +352,10 @@ export default function ReflectionPage() {
                         <h3 className="font-medium text-base border-b pb-2 mb-3">Points forts</h3>
                         <ul className="space-y-2">
                           {evaluation.evaluation.points_forts.map((point, index) => (
-                            <li key={index} className="text-sm text-muted-foreground">
-                              {point}
+                            <li key={index} className="text-sm text-muted-foreground prose prose-sm dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {point}
+                              </ReactMarkdown>
                             </li>
                           ))}
                         </ul>
@@ -360,8 +364,10 @@ export default function ReflectionPage() {
                         <h3 className="font-medium text-base border-b pb-2 mb-3">Axes d'amélioration</h3>
                         <ul className="space-y-2">
                           {evaluation.evaluation.points_ameliorer.map((point: string, index: number) => (
-                            <li key={index} className="text-sm text-muted-foreground">
-                              {point}
+                            <li key={index} className="text-sm text-muted-foreground prose prose-sm dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {point}
+                              </ReactMarkdown>
                             </li>
                           ))}
                         </ul>
@@ -370,19 +376,19 @@ export default function ReflectionPage() {
                     
                     <div className="mt-8">
                       <h3 className="font-medium text-base border-b pb-2 mb-3">Feedback détaillé</h3>
-                      <div className="">
-                        <p className="text-sm whitespace-pre-wrap">
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {evaluation.evaluation.conseil_personnalise}
-                        </p>
+                        </ReactMarkdown>
                       </div>
                     </div>
                     
                     <div className="mt-8">
                       <h3 className="font-medium text-base border-b pb-2 mb-3">Proposition de réponse</h3>
-                      <div className="">
-                        <p className="text-sm whitespace-pre-wrap">
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {evaluation.evaluation.reponse_modele}
-                        </p>
+                        </ReactMarkdown>
                       </div>
                     </div>
                     
