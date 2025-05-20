@@ -42,11 +42,24 @@ export async function askQuestion(matiere: string, query: string) {
 }
 
 export interface ReflectionQuestion {
-  question: string;
-  concepts_abordés: string[];
-  niveau_difficulté: string;
-  compétences_visées: string[];
-  éléments_réponse: string[];
+  question: string | {
+    question: string;
+    concepts_abordés?: string[];
+    niveau_difficulté?: string;
+    compétences_visées?: string[];
+    éléments_réponse?: string[];
+  };
+  
+  // Fields from text format response
+  matiere?: string;
+  concept?: string;
+  format?: string;
+  
+  // Fields from JSON format response
+  concepts_abordés?: string[];
+  niveau_difficulté?: string;
+  compétences_visées?: string[];
+  éléments_réponse?: string[];
 }
 
 export interface EvaluationData {
@@ -67,7 +80,16 @@ export interface EvaluationResponse {
 export const generateReflectionQuestion = async (matiere: string, conceptCle: string) => {
   return fetchApi<ReflectionQuestion>('/question/reflection', {
     method: 'POST',
-    body: JSON.stringify({ matiere, concept_cle: conceptCle }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ 
+      matiere,
+      concept_cle: conceptCle,
+      output_format: 'json',  // This is the key parameter required by the API
+      save_output: true       // This parameter is also used in the web interface
+    }),
   });
 };
 

@@ -43,10 +43,37 @@ export default function ReflectionPage() {
     setIsLoading(true);
     try {
       const response = await generateReflectionQuestion(selectedMatiere, conceptCle);
-      setQuestion(response.data);
+      console.log("Question data received:", response.data);
+      
+      // The API returns data.question which may be a JSON string that needs to be parsed
+      let parsedQuestion;
+      
+      if (response.data && typeof response.data.question === 'string') {
+        try {
+          // Try to parse the question field as JSON
+          parsedQuestion = JSON.parse(response.data.question);
+          console.log("Successfully parsed question JSON string:", parsedQuestion);
+        } catch (e) {
+          console.error("Error parsing question JSON:", e);
+          // If parsing fails, use the string directly
+          parsedQuestion = {
+            question: response.data.question,
+            matiere: response.data.matiere,
+            concept: response.data.concept,
+            format: response.data.format
+          };
+        }
+      } else {
+        // If data.question is not a string, use the data directly
+        parsedQuestion = response.data;
+      }
+      
+      console.log("Final parsed question data:", parsedQuestion);
+      setQuestion(parsedQuestion);
       setReponse("");
       setEvaluation(null);
     } catch (error) {
+      console.error("Error generating question:", error);
       toast.error("Erreur lors de la génération de la question");
     } finally {
       setIsLoading(false);
@@ -66,7 +93,12 @@ export default function ReflectionPage() {
 
     setIsEvaluating(true);
     try {
-      const response = await evaluateResponse(selectedMatiere, question.question, reponse);
+      // Extract the question text, handling both string and nested object cases
+      const questionText = typeof question.question === 'string' 
+        ? question.question 
+        : question.question?.question || '';
+        
+      const response = await evaluateResponse(selectedMatiere, questionText, reponse);
       setEvaluation(response.data);
     } catch (error) {
       toast.error("Erreur lors de l'évaluation de la réponse");
@@ -167,73 +199,126 @@ export default function ReflectionPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      <p className="text-lg">{question.question}</p>
+                      {/* Display the question text directly from the parsed object */}
+                      <p className="text-lg">{
+                        // Display the question text from the correct property
+                        typeof question?.question === 'string' 
+                          ? question.question 
+                          : question?.question?.question || ''
+                      }</p>
 
+                      {/* Display metadata from the parsed object */}
                       <div className="grid gap-4">
-                        {question.concepts_abordés && question.concepts_abordés.length > 0 && (
-                          <div>
-                            <h3 className="text-sm font-medium mb-2">Concepts abordés</h3>
-                            <div className="flex flex-wrap gap-2">
-                              {question.concepts_abordés.map((concept, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="bg-primary/10 text-primary"
-                                >
-                                  {concept}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        {/* Helper function to safely access properties */}
+                        {(() => {
+                          // Get concepts from the appropriate location
+                          const concepts = typeof question?.question === 'object' 
+                            ? question.question?.concepts_abordés 
+                            : question?.concepts_abordés;
+                            
+                          if (concepts && concepts.length > 0) {
+                            return (
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Concepts abordés</h3>
+                                <div className="flex flex-wrap gap-2">
+                                  {concepts.map((concept: string, index: number) => (
+                                    <Badge
+                                      key={index}
+                                      variant="outline"
+                                      className="bg-primary/10 text-primary"
+                                    >
+                                      {concept}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
 
-                        {question.niveau_difficulté && (
-                          <div>
-                            <h3 className="text-sm font-medium mb-2">Niveau de difficulté</h3>
-                            <Badge variant="secondary">{question.niveau_difficulté}</Badge>
-                          </div>
-                        )}
+                        {/* Show difficulty level */}
+                        {(() => {
+                          const difficultyLevel = typeof question?.question === 'object' 
+                            ? question.question?.niveau_difficulté 
+                            : question?.niveau_difficulté;
+                            
+                          if (difficultyLevel) {
+                            return (
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Niveau de difficulté</h3>
+                                <Badge variant="secondary">{difficultyLevel}</Badge>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
 
-                        {question.compétences_visées && question.compétences_visées.length > 0 && (
-                          <div>
-                            <h3 className="text-sm font-medium mb-2">Compétences visées</h3>
-                            <ul className="space-y-2">
-                              {question.compétences_visées.map((comp, index) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary"></div>
-                                  <span className="text-muted-foreground text-sm">{comp}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {/* Show targeted skills */}
+                        {/* {(() => {
+                          const skills = typeof question?.question === 'object' 
+                            ? question.question?.compétences_visées 
+                            : question?.compétences_visées;
+                            
+                          if (skills && skills.length > 0) {
+                            return (
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Compétences visées</h3>
+                                <ul className="space-y-2">
+                                  {skills.map((comp: string, index: number) => (
+                                    <li key={index} className="flex items-start gap-2">
+                                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary"></div>
+                                      <span className="text-muted-foreground text-sm">{comp}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()} */}
+                        
+                        {/* Show response elements */}
+                        {/* {(() => {
+                          const responseElements = typeof question?.question === 'object' 
+                            ? question.question?.éléments_réponse 
+                            : question?.éléments_réponse;
+                            
+                          if (responseElements && responseElements.length > 0) {
+                            return (
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Éléments de réponse attendus</h3>
+                                <ul className="space-y-2">
+                                  {responseElements.map((element: string, index: number) => (
+                                    <li key={index} className="flex items-start gap-2">
+                                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary"></div>
+                                      <span className="text-muted-foreground text-sm">{element}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()} */}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Votre réponse</CardTitle>
-                    <CardDescription>
-                      Rédigez votre réponse à la question
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <Textarea
-                        placeholder="Entrez votre réponse..."
-                        value={reponse}
-                        onChange={(e) => setReponse(e.target.value)}
-                        className="min-h-[200px] resize-none"
-                      />
-                      <div className="flex justify-end">
-                        <Button
-                          onClick={handleSubmit}
-                          disabled={!reponse.trim() || isEvaluating}
-                        >
-                          {isEvaluating ? "Évaluation..." : "Soumettre"}
-                        </Button>
+                      
+                      <div className="pt-6 border-t border-border">
+                        <h3 className="font-medium text-base mb-3">Votre réponse</h3>
+                        <Textarea
+                          placeholder="Entrez votre réponse..."
+                          value={reponse}
+                          onChange={(e) => setReponse(e.target.value)}
+                          className="min-h-[200px] resize-none"
+                        />
+                        <div className="flex justify-end mt-4">
+                          <Button
+                            onClick={handleSubmit}
+                            disabled={!reponse.trim() || isEvaluating}
+                          >
+                            {isEvaluating ? "Évaluation..." : "Soumettre"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
