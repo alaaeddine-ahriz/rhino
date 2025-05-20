@@ -7,10 +7,14 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = params.path;
+    const pathParts = Array.isArray(params.path) ? [...params.path] : [];
+    const pathString = pathParts.join('/');
+    
     const searchParams = request.nextUrl.searchParams;
     const queryString = searchParams.toString();
-    const url = queryString ? `${API_BASE_URL}/${path.join('/')}?${queryString}` : `${API_BASE_URL}/${path.join('/')}`;
+    const url = queryString 
+      ? `${API_BASE_URL}/${pathString}?${queryString}` 
+      : `${API_BASE_URL}/${pathString}`;
 
     const response = await fetch(url, {
       headers: {
@@ -34,10 +38,12 @@ export async function POST(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = params.path;
+    const pathParts = Array.isArray(params.path) ? [...params.path] : [];
+    const pathString = pathParts.join('/');
+    
     const body = await request.json();
 
-    const response = await fetch(`${API_BASE_URL}/${path.join('/')}`, {
+    const response = await fetch(`${API_BASE_URL}/${pathString}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -245,43 +245,38 @@ export default function ReflectionPage() {
             {evaluation && (
               <div className="space-y-8">
                 <Card className="border shadow-sm">
-                  <CardHeader>
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle>Résultat de l'évaluation</CardTitle>
-                      <div className="bg-primary text-primary-foreground px-6 py-2 rounded-full text-2xl font-bold">
-                        {evaluation.evaluation.note}/100
+                      <div>
+                        <CardTitle className="text-2xl">Évaluation</CardTitle>
+                        <CardDescription>
+                          Analyse détaillée de votre réponse
+                        </CardDescription>
+                      </div>
+                      <div className="bg-primary rounded-md px-5 py-2.5 text-primary-foreground">
+                        <span className="text-2xl font-bold">{evaluation.evaluation.note}</span>
+                        <span className="text-xl">/100</span>
                       </div>
                     </div>
-                    <CardDescription>
-                      Évaluation de votre réponse
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-green-50 dark:bg-green-950/20 p-6 rounded-xl">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-2xl">✨</span>
-                          <h3 className="font-medium text-lg">Points forts</h3>
-                        </div>
-                        <ul className="space-y-3">
+                    <div className="flex flex-col space-y-6 md:space-y-0 md:flex-row md:gap-6">
+                      <div className="flex-1 border-l-4 border-green-400 bg-green-50/50 dark:bg-green-950/10 p-5 rounded-md">
+                        <h3 className="font-medium text-base border-b pb-2 mb-3">Points forts</h3>
+                        <ul className="space-y-2">
                           {evaluation.evaluation.points_forts.map((point, index) => (
-                            <li key={index} className="flex items-start gap-3">
-                              <span className="text-green-500 mt-1">✓</span>
-                              <span className="text-muted-foreground">{point}</span>
+                            <li key={index} className="text-sm text-muted-foreground">
+                              {point}
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <div className="bg-orange-50 dark:bg-orange-950/20 p-6 rounded-xl">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-2xl">💡</span>
-                          <h3 className="font-medium text-lg">Axes d'amélioration</h3>
-                        </div>
-                        <ul className="space-y-3">
+                      <div className="flex-1 border-l-4 border-amber-400 bg-amber-50/50 dark:bg-amber-950/10 p-5 rounded-md">
+                        <h3 className="font-medium text-base border-b pb-2 mb-3">Axes d'amélioration</h3>
+                        <ul className="space-y-2">
                           {evaluation.evaluation.points_ameliorer.map((point: string, index: number) => (
-                            <li key={index} className="flex items-start gap-3">
-                              <span className="text-orange-500 mt-1">!</span>
-                              <span className="text-muted-foreground">{point}</span>
+                            <li key={index} className="text-sm text-muted-foreground">
+                              {point}
                             </li>
                           ))}
                         </ul>
@@ -289,10 +284,19 @@ export default function ReflectionPage() {
                     </div>
                     
                     <div className="mt-8">
-                      <h3 className="font-medium text-lg mb-4">Feedback détaillé</h3>
-                      <div className="bg-muted/30 p-6 rounded-xl">
-                        <p className="text-muted-foreground whitespace-pre-wrap">
+                      <h3 className="font-medium text-base border-b pb-2 mb-3">Feedback détaillé</h3>
+                      <div className="">
+                        <p className="text-sm whitespace-pre-wrap">
                           {evaluation.evaluation.conseil_personnalise}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8">
+                      <h3 className="font-medium text-base border-b pb-2 mb-3">Proposition de réponse</h3>
+                      <div className="">
+                        <p className="text-sm whitespace-pre-wrap">
+                          {evaluation.evaluation.reponse_modele}
                         </p>
                       </div>
                     </div>
