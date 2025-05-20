@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Rhino - Système RAG pour cours</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            color: #333;
+        }
+        header {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .section {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-container {
+            background-color: #2b2b2b;
+            color: #f0f0f0;
+            font-family: monospace;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .log-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 2px solid white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .sources {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .source-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+        }
+        .evaluation-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+        .evaluation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .evaluation-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background-color: #2c3e50;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        .evaluation-points {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .evaluation-points-column {
+            flex: 1;
+            padding: 10px;
+        }
+        .points-strong {
+            background-color: #e6f7e6;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .points-improve {
+            background-color: #f7e6e6;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .point-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .point-item:before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+        }
+        .model-answer {
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .personal-advice {
+            background-color: #fff8e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #f1c40f;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Le Rhino</h1>
+        <p>Système de génération de questions et d'évaluation basé sur RAG pour vos cours</p>
+    </header>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="tab-matieres">Matières</div>
+        <div class="tab" data-tab="tab-question">Poser une question</div>
+        <div class="tab" data-tab="tab-reflection">Générer une question</div>
+        <div class="tab" data-tab="tab-evaluation">Évaluer une réponse</div>
+    </div>
+    
+    <div id="tab-matieres" class="tab-content active">
+        <div class="section">
+            <h2>Liste des matières</h2>
+            <p>Voici les matières disponibles dans le système:</p>
+            <div id="matieres-list"></div>
+            <div class="spinner" id="spinner-matieres"></div>
+            <button id="btn-refresh-matieres">Rafraîchir la liste</button>
+        </div>
+        
+        <div class="section">
+            <h2>Mettre à jour une matière</h2>
+            <div class="form-group">
+                <label for="update-matiere">Sélectionnez une matière:</label>
+                <select id="update-matiere"></select>
+            </div>
+            <button id="btn-update-matiere">Mettre à jour l'index</button>
+            <div class="spinner" id="spinner-update"></div>
+            <div id="update-result" class="result" style="display: none;"></div>
+            <div id="update-logs" class="log-container" style="display: none;">
+                <div class="log-title">Logs de mise à jour :</div>
+                <div id="logs-content"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tab-question" class="tab-content">
+        <div class="section">
+            <h2>Poser une question</h2>
+            <div class="form-group">
+                <label for="question-matiere">Matière:</label>
+                <select id="question-matiere"></select>
+            </div>
+            <div class="form-group">
+                <label for="question-query">Votre question:</label>
+                <textarea id="question-query" rows="3" placeholder="Entrez votre question ici..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="question-format">Format de sortie:</label>
+                <select id="question-format">
+                    <option value="text">Texte</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+            <button id="btn-ask-question">Poser la question</button>
+            <div class="spinner" id="spinner-question"></div>
+            <div id="question-result" class="result" style="display: none;"></div>
+            <div id="sources-result" class="sources" style="display: none;">
+                <h3>Sources:</h3>
+                <div id="sources-list"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tab-reflection" class="tab-content">
+        <div class="section">
+            <h2>Générer une question de réflexion</h2>
+            <div class="form-group">
+                <label for="reflection-matiere">Matière:</label>
+                <select id="reflection-matiere"></select>
+            </div>
+            <div class="form-group">
+                <label for="reflection-concept">Concept clé (optionnel):</label>
+                <input type="text" id="reflection-concept" placeholder="Ex: virtualisation, réseaux, sécurité...">
+            </div>
+            <div class="form-group">
+                <label for="reflection-format">Format de sortie:</label>
+                <select id="reflection-format">
+                    <option value="text">Texte</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+            <button id="btn-generate-reflection">Générer une question</button>
+            <div class="spinner" id="spinner-reflection"></div>
+            <div id="reflection-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <div id="tab-evaluation" class="tab-content">
+        <div class="section">
+            <h2>Évaluer la réponse d'un étudiant</h2>
+            <div class="form-group">
+                <label for="evaluation-matiere">Matière:</label>
+                <select id="evaluation-matiere"></select>
+            </div>
+            <div class="form-group">
+                <label for="evaluation-question">Question posée:</label>
+                <textarea id="evaluation-question" rows="2" placeholder="Entrez la question posée à l'étudiant..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="evaluation-response">Réponse de l'étudiant:</label>
+                <textarea id="evaluation-response" rows="6" placeholder="Copiez ici la réponse de l'étudiant à évaluer..."></textarea>
+            </div>
+            <button id="btn-evaluate-response">Évaluer la réponse</button>
+            <div class="spinner" id="spinner-evaluation"></div>
+            
+            <div id="evaluation-result" class="evaluation-card" style="display: none;">
+                <div class="evaluation-header">
+                    <h3>Résultat de l'évaluation</h3>
+                    <div class="evaluation-score" id="evaluation-score">0/100</div>
+                </div>
+                
+                <div class="evaluation-points">
+                    <div class="evaluation-points-column points-strong">
+                        <h4>Points forts</h4>
+                        <div id="evaluation-strong-points"></div>
+                    </div>
+                    <div class="evaluation-points-column points-improve">
+                        <h4>Points à améliorer</h4>
+                        <div id="evaluation-improve-points"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4>Réponse modèle</h4>
+                    <div id="evaluation-model-answer" class="model-answer"></div>
+                </div>
+                
+                <div>
+                    <h4>Justification de la note</h4>
+                    <div id="evaluation-justification" class="result"></div>
+                </div>
+                
+                <div class="personal-advice">
+                    <h4>Conseil personnalisé</h4>
+                    <div id="evaluation-advice"></div>
+                </div>
+            </div>
+            
+            <div id="evaluation-logs" class="log-container" style="display: none;">
+                <div class="log-title">Logs d'évaluation :</div>
+                <div id="evaluation-logs-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion des onglets
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Désactiver tous les onglets
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Masquer tous les contenus
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Activer l'onglet cliqué
+                    tab.classList.add('active');
+                    // Afficher le contenu correspondant
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Charger la liste des matières au démarrage
+            loadMatieres();
+            
+            // Event listeners pour les boutons
+            document.getElementById('btn-refresh-matieres').addEventListener('click', loadMatieres);
+            document.getElementById('btn-update-matiere').addEventListener('click', updateMatiere);
+            document.getElementById('btn-ask-question').addEventListener('click', askQuestion);
+            document.getElementById('btn-generate-reflection').addEventListener('click', generateReflection);
+            document.getElementById('btn-evaluate-response').addEventListener('click', evaluateResponse);
+        });
+        
+        // Fonction pour charger la liste des matières
+        async function loadMatieres() {
+            const spinnerMatieres = document.getElementById('spinner-matieres');
+            const matieresSelect = document.getElementById('update-matiere');
+            const questionMatiere = document.getElementById('question-matiere');
+            const reflectionMatiere = document.getElementById('reflection-matiere');
+            const evaluationMatiere = document.getElementById('evaluation-matiere');
+            const matieresListDiv = document.getElementById('matieres-list');
+            
+            spinnerMatieres.style.display = 'block';
+            matieresListDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/matieres');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Afficher la liste des matières
+                    const matieres = data.data.matieres;
+                    
+                    if (matieres.length === 0) {
+                        matieresListDiv.innerHTML = '<p>Aucune matière trouvée. Veuillez ajouter des documents dans le dossier "cours".</p>';
+                    } else {
+                        const ul = document.createElement('ul');
+                        matieres.forEach(matiere => {
+                            const li = document.createElement('li');
+                            li.textContent = matiere;
+                            ul.appendChild(li);
+                        });
+                        matieresListDiv.appendChild(ul);
+                        
+                        // Remplir les sélecteurs de matières
+                        [matieresSelect, questionMatiere, reflectionMatiere, evaluationMatiere].forEach(select => {
+                            select.innerHTML = '';
+                            matieres.forEach(matiere => {
+                                const option = document.createElement('option');
+                                option.value = matiere;
+                                option.textContent = matiere;
+                                select.appendChild(option);
+                            });
+                        });
+                    }
+                } else {
+                    matieresListDiv.innerHTML = `<p>Erreur: ${data.message}</p>`;
+                }
+            } catch (error) {
+                matieresListDiv.innerHTML = `<p>Erreur: ${error.message}</p>`;
+            } finally {
+                spinnerMatieres.style.display = 'none';
+            }
+        }
+        
+        // Fonction pour mettre à jour une matière
+        async function updateMatiere() {
+            const matiere = document.getElementById('update-matiere').value;
+            const updateResult = document.getElementById('update-result');
+            const spinnerUpdate = document.getElementById('spinner-update');
+            const updateLogs = document.getElementById('update-logs');
+            const logsContent = document.getElementById('logs-content');
+            
+            if (!matiere) {
+                updateResult.textContent = 'Veuillez sélectionner une matière.';
+                updateResult.style.display = 'block';
+                updateLogs.style.display = 'none';
+                return;
+            }
+            
+            updateResult.style.display = 'none';
+            updateLogs.style.display = 'none';
+            spinnerUpdate.style.display = 'block';
+            
+            try {
+                const response = await fetch('/matieres/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ matiere })
+                });
+                
+                const data = await response.json();
+                updateResult.textContent = data.message;
+                updateResult.style.display = 'block';
+                
+                // Afficher les logs s'ils sont disponibles
+                if (data.data && data.data.logs) {
+                    logsContent.textContent = data.data.logs;
+                    updateLogs.style.display = 'block';
+                }
+            } catch (error) {
+                updateResult.textContent = `Erreur: ${error.message}`;
+                updateResult.style.display = 'block';
+            } finally {
+                spinnerUpdate.style.display = 'none';
+            }
+        }
+        
+        // Fonction pour poser une question
+        async function askQuestion() {
+            const matiere = document.getElementById('question-matiere').value;
+            const query = document.getElementById('question-query').value;
+            const outputFormat = document.getElementById('question-format').value;
+            const questionResult = document.getElementById('question-result');
+            const spinnerQuestion = document.getElementById('spinner-question');
+            const sourcesResult = document.getElementById('sources-result');
+            const sourcesList = document.getElementById('sources-list');
+            
+            if (!matiere || !query) {
+                questionResult.textContent = 'Veuillez sélectionner une matière et entrer une question.';
+                questionResult.style.display = 'block';
+                sourcesResult.style.display = 'none';
+                return;
+            }
+            
+            questionResult.style.display = 'none';
+            sourcesResult.style.display = 'none';
+            spinnerQuestion.style.display = 'block';
+            
+            try {
+                const response = await fetch('/question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        matiere,
+                        query,
+                        output_format: outputFormat,
+                        save_output: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Afficher la réponse
+                    questionResult.textContent = data.data.response;
+                    questionResult.style.display = 'block';
+                    
+                    // Afficher les sources si disponibles
+                    if (data.data.sources && data.data.sources.length > 0) {
+                        sourcesList.innerHTML = '';
+                        data.data.sources.forEach(source => {
+                            const sourceDiv = document.createElement('div');
+                            sourceDiv.className = 'source-item';
+                            
+                            const sourceName = document.createElement('p');
+                            sourceName.innerHTML = `<strong>Source:</strong> ${source.source}`;
+                            sourceDiv.appendChild(sourceName);
+                            
+                            if (source.section) {
+                                const section = document.createElement('p');
+                                section.innerHTML = `<strong>Section:</strong> ${source.section}`;
+                                sourceDiv.appendChild(section);
+                            }
+                            
+                            const content = document.createElement('p');
+                            content.innerHTML = `<strong>Extrait:</strong> ${source.contenu}`;
+                            sourceDiv.appendChild(content);
+                            
+                            sourcesList.appendChild(sourceDiv);
+                        });
+                        
+                        sourcesResult.style.display = 'block';
+                    }
+                } else {
+                    questionResult.textContent = `Erreur: ${data.message}`;
+                    questionResult.style.display = 'block';
+                }
+            } catch (error) {
+                questionResult.textContent = `Erreur: ${error.message}`;
+                questionResult.style.display = 'block';
+            } finally {
+                spinnerQuestion.style.display = 'none';
+            }
+        }
+        
+        // Fonction pour générer une question de réflexion
+        async function generateReflection() {
+            const matiere = document.getElementById('reflection-matiere').value;
+            const concept = document.getElementById('reflection-concept').value;
+            const outputFormat = document.getElementById('reflection-format').value;
+            const reflectionResult = document.getElementById('reflection-result');
+            const spinnerReflection = document.getElementById('spinner-reflection');
+            
+            if (!matiere) {
+                reflectionResult.textContent = 'Veuillez sélectionner une matière.';
+                reflectionResult.style.display = 'block';
+                return;
+            }
+            
+            reflectionResult.style.display = 'none';
+            spinnerReflection.style.display = 'block';
+            
+            try {
+                const response = await fetch('/question/reflection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        matiere,
+                        concept_cle: concept,
+                        output_format: outputFormat,
+                        save_output: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    reflectionResult.textContent = data.data.question;
+                    reflectionResult.style.display = 'block';
+                } else {
+                    reflectionResult.textContent = `Erreur: ${data.message}`;
+                    reflectionResult.style.display = 'block';
+                }
+            } catch (error) {
+                reflectionResult.textContent = `Erreur: ${error.message}`;
+                reflectionResult.style.display = 'block';
+            } finally {
+                spinnerReflection.style.display = 'none';
+            }
+        }
+        
+        // Fonction pour évaluer une réponse d'étudiant
+        async function evaluateResponse() {
+            const matiere = document.getElementById('evaluation-matiere').value;
+            const question = document.getElementById('evaluation-question').value;
+            const studentResponse = document.getElementById('evaluation-response').value;
+            const spinnerEvaluation = document.getElementById('spinner-evaluation');
+            const evaluationResult = document.getElementById('evaluation-result');
+            const evaluationLogs = document.getElementById('evaluation-logs');
+            const evaluationLogsContent = document.getElementById('evaluation-logs-content');
+            
+            // Éléments d'affichage du résultat
+            const scoreElement = document.getElementById('evaluation-score');
+            const strongPointsElement = document.getElementById('evaluation-strong-points');
+            const improvePointsElement = document.getElementById('evaluation-improve-points');
+            const modelAnswerElement = document.getElementById('evaluation-model-answer');
+            const justificationElement = document.getElementById('evaluation-justification');
+            const adviceElement = document.getElementById('evaluation-advice');
+            
+            if (!matiere || !question || !studentResponse) {
+                alert('Veuillez remplir tous les champs (matière, question et réponse).');
+                return;
+            }
+            
+            // Cacher les résultats précédents et afficher le spinner
+            evaluationResult.style.display = 'none';
+            evaluationLogs.style.display = 'none';
+            spinnerEvaluation.style.display = 'block';
+            
+            try {
+                const response = await fetch('/evaluation/response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        matiere,
+                        question,
+                        student_response: studentResponse,
+                        save_output: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data.evaluation) {
+                    const evaluation = data.data.evaluation;
+                    
+                    // Afficher le score
+                    scoreElement.textContent = `${evaluation.note}/100`;
+                    
+                    // Afficher les points forts
+                    strongPointsElement.innerHTML = '';
+                    evaluation.points_forts.forEach(point => {
+                        const pointElement = document.createElement('div');
+                        pointElement.className = 'point-item';
+                        pointElement.textContent = point;
+                        strongPointsElement.appendChild(pointElement);
+                    });
+                    
+                    // Afficher les points à améliorer
+                    improvePointsElement.innerHTML = '';
+                    evaluation.points_ameliorer.forEach(point => {
+                        const pointElement = document.createElement('div');
+                        pointElement.className = 'point-item';
+                        pointElement.textContent = point;
+                        improvePointsElement.appendChild(pointElement);
+                    });
+                    
+                    // Afficher la réponse modèle
+                    modelAnswerElement.textContent = evaluation.reponse_modele;
+                    
+                    // Afficher la justification
+                    justificationElement.textContent = evaluation.justification_note;
+                    
+                    // Afficher le conseil personnalisé
+                    adviceElement.textContent = evaluation.conseil_personnalise;
+                    
+                    // Afficher le résultat
+                    evaluationResult.style.display = 'block';
+                    
+                    // Afficher les logs s'ils sont disponibles
+                    if (data.data.logs) {
+                        evaluationLogsContent.textContent = data.data.logs;
+                        evaluationLogs.style.display = 'block';
+                    }
+                } else {
+                    alert(`Erreur: ${data.message || 'Impossible d\'évaluer la réponse.'}`);
+                }
+            } catch (error) {
+                alert(`Erreur: ${error.message}`);
+            } finally {
+                spinnerEvaluation.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
