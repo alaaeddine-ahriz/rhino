@@ -17,11 +17,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={inter.className}>
-        <main className="min-h-screen bg-background">
+      <body className={`${inter.className} antialiased`}>
+        <div className="flex min-h-screen flex-col bg-background">
           {children}
-        </main>
-        <Toaster />
+        </div>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

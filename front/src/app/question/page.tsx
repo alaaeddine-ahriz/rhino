@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { getMatieres, askQuestion } from "@/lib/api";
+import { Navbar } from "@/components/ui/navbar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function QuestionPage() {
   const router = useRouter();
@@ -55,95 +57,155 @@ export default function QuestionPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Poser une question</CardTitle>
-          <CardDescription>
-            Posez une question sur le contenu des cours
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Matière</label>
-            <Select
-              value={selectedMatiere}
-              onValueChange={setSelectedMatiere}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez une matière" />
-              </SelectTrigger>
-              <SelectContent>
-                {matieres.map((matiere) => (
-                  <SelectItem key={matiere} value={matiere}>
-                    {matiere}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Question</label>
-            <Textarea
-              placeholder="Entrez votre question..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/")}
-            >
-              Retour
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading || !selectedMatiere || !question.trim()}
-            >
-              {isLoading ? "Génération..." : "Poser la question"}
-            </Button>
-          </div>
-
-          {response && (
-            <div className="mt-8 space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Réponse</h3>
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {response.response}
-                </p>
+    <main className="flex flex-col min-h-screen">
+      <Navbar />
+      
+      <section className="flex-1 w-full py-12 md:py-24 bg-gradient-to-b from-background to-muted/10">
+        <div className="container px-4 md:px-6 mx-auto">
+          <div className="mx-auto max-w-3xl space-y-4">
+            <div className="space-y-2">
+              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
+                Questions
               </div>
+              <h1 className="text-3xl font-bold tracking-tighter md:text-4xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+                Posez une question
+              </h1>
+              <p className="text-muted-foreground md:text-lg">
+                Obtenez des réponses précises basées sur le contenu de vos cours
+              </p>
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Sources</h3>
+          <div className="mx-auto max-w-3xl mt-10">
+            {!response && (
+              <Card className="border shadow-sm">
+                <CardHeader>
+                  <CardTitle>Votre question</CardTitle>
+                  <CardDescription>
+                    Sélectionnez une matière et posez votre question
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Matière</label>
+                      <Select
+                        value={selectedMatiere}
+                        onValueChange={setSelectedMatiere}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez une matière" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {matieres.map((matiere) => (
+                            <SelectItem key={matiere} value={matiere}>
+                              {matiere}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Question</label>
+                      <Textarea
+                        placeholder="Entrez votre question..."
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        className="min-h-[100px] resize-none"
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-4 pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => router.push("/")}
+                      >
+                        Retour
+                      </Button>
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={isLoading || !selectedMatiere || !question.trim()}
+                      >
+                        {isLoading ? "Génération..." : "Poser la question"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {response && (
+              <div className="space-y-8">
+                <Card className="border shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Question</CardTitle>
+                    <CardDescription>
+                      {question}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card className="border shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Réponse</CardTitle>
+                    <CardDescription>
+                      Réponse générée à partir de vos documents
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-muted-foreground whitespace-pre-wrap">
+                      {response.response}
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <div className="space-y-4">
-                  {response.sources.map((source, index) => (
-                    <Card key={index}>
-                      <CardContent className="pt-0">
-                        <div className="space-y-2">
-                          <p className="font-medium">{source.source}</p>
-                          <p className="text-sm text-muted-foreground">
+                  <h2 className="text-xl font-bold">Sources</h2>
+                  <div className="grid gap-4">
+                    {response.sources.map((source, index) => (
+                      <Card key={index} className="overflow-hidden">
+                        <CardHeader className="bg-muted/30 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{source.source}</div>
+                            {source.relevance_score !== undefined && (
+                              <Badge variant="outline" className="bg-primary/10 text-primary">
+                                Score: {source.relevance_score.toFixed(2)}
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription>
                             {source.section}
-                          </p>
-                          <p className="text-sm">{source.contenu}</p>
-                          {source.relevance_score !== undefined && (
-                            <p className="text-xs text-muted-foreground">
-                              Score de pertinence: {source.relevance_score.toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                          <div className="bg-muted/20 p-3 rounded-md text-sm">
+                            {source.contenu}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setResponse(null)}
+                  >
+                    Poser une autre question
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/")}
+                  >
+                    Retour à l'accueil
+                  </Button>
                 </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 } 
